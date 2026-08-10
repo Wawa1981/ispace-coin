@@ -1,0 +1,120 @@
+<template>
+  <div :class="[bgClass, textClass]" class="min-h-screen relative overflow-x-hidden transition-colors duration-700 has-ticker">
+
+    <!-- Canvas étoiles -->
+    <canvas ref="canvasRef" class="pointer-events-none fixed inset-0 w-full h-full z-0"></canvas>
+
+    <!-- ✅ Ticker réutilisé -->
+    <Ticker />
+
+    <main class="relative z-10 w-full" :style="{ paddingTop: 'calc(var(--ticker-h) + 14px)' }">
+
+      <!-- Switch thème -->
+      <div class="absolute right-4 z-50 flex gap-3" :style="{ top: 'calc(var(--ticker-h) + 8px)' }">
+        <button @click="cycleDarkTheme"
+          class="w-12 h-12 rounded-full bg-gray text-xl text-black flex items-center justify-center shadow-2xl hover:scale-110 transition"
+          title="Changer le style du thème sombre" aria-label="Thème sombre">🌍</button>
+
+        <button @click="toggleLight"
+          class="w-12 h-12 rounded-full bg-gray text-xl text-black flex items-center justify-center shadow-2xl hover:scale-110 transition"
+          :title="isLight ? 'Passer en Nuit' : 'Passer en Jour'"
+          :aria-label="isLight ? 'Passer en Nuit' : 'Passer en Jour'">
+          {{ isLight ? '🌖 ' : '🌕 ' }}
+        </button>
+      </div>
+
+      <!-- 📰 News -->
+      <section id="news" class="mt-8">
+        <!-- ... contenu inchangé ... -->
+      </section>
+
+      <!-- Wallet -->
+      <section class="min-h-[36vh] md:min-h-[34vh] flex flex-col items-center justify-center text-center px-4">
+        <h1 :class="['text-5xl md:text-6xl font-extrabold animate-rotateY', titleClass]">Wallet Cryptobank</h1>
+        <div class="mt-8 flex gap-6">
+          <Link :href="route('login')" :class="['btn-futuristic from-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-600', btnBorderClass]">login</Link>
+          <Link :href="route('register')" :class="['btn-futuristic from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600', btnBorderClass]">Register</Link>
+        </div>
+      </section>
+
+      <!-- Markets -->
+      <section id="markets" class="pt-2 -mt-8 md:-mt-10">
+        <!-- ... contenu inchangé ... -->
+      </section>
+
+      <!-- Prévention -->
+      <section id="prevention" :class="isLight ? 'bg-white/80' : 'bg-black/40'" class="py-20">
+        <!-- ... contenu inchangé ... -->
+      </section>
+
+      <!-- Footer -->
+      <footer :class="isLight ? 'bg-white' : 'bg-black/60'" class="py-10">
+        <!-- ... contenu inchangé ... -->
+      </footer>
+
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { Link } from '@inertiajs/vue3'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import Ticker from '@/Components/Ticker.vue'   // ✅ import du composant
+
+/* --------- Canvas étoiles --------- */
+const canvasRef = ref(null)
+const running = ref(true)
+// ... ton code étoiles inchangé ...
+
+/* --------- Thème --------- */
+const isLight = ref(false)
+const darkIndex = ref(1)
+const darkThemes = [
+  'bg-gradient-to-br from-indigo-900 via-purple-900 to-black',
+  'bg-gradient-to-b from-blue-950 via-slate-900 to-black',
+  'bg-gradient-to-tr from-fuchsia-900 via-purple-900 to-black'
+]
+const bgClass = computed(() => (isLight.value ? 'bg-gray-100' : darkThemes[darkIndex.value]))
+const textClass = computed(() => (isLight.value ? 'text-black' : 'text-white'))
+const bodyTextClass = computed(() => (isLight.value ? 'text-gray-800' : 'text-gray-200'))
+const btnBorderClass = computed(() => (isLight.value ? 'border-black/20' : 'border-white'))
+const socialBtnClass = computed(() => (isLight.value ? 'border-black/20 hover:bg-black/5' : 'border-white/30 hover:bg-white/10'))
+const titleClass = computed(() => (isLight.value ? 'title-gradient' : 'neon-text-night'))
+
+function toggleLight() { isLight.value = !isLight.value }
+function cycleDarkTheme() { if (!isLight.value) darkIndex.value = (darkIndex.value + 1) % darkThemes.length }
+
+/* --------- Tableau markets --------- */
+const markets = ref([])
+const query = ref('')
+const isTableCollapsed = ref(true)
+const collapsedRows = 8
+// ... code markets inchangé ...
+
+/* --------- News compactes --------- */
+const news = ref([])
+const currentIndex = ref(0)
+// ... code news inchangé ...
+</script>
+
+<style scoped>
+.has-ticker { --ticker-h: 48px; }
+@media (min-width:768px){ .has-ticker { --ticker-h:56px; } }
+
+@keyframes rotateY {0%{transform:rotateY(0);}100%{transform:rotateY(360deg);} }
+.animate-rotateY{ animation:rotateY 10s linear infinite; display:inline-block; transform-style:preserve-3d; }
+
+.neon-text-night{ text-shadow:0 0 6px #fff,0 0 12px #0ff,0 0 24px #0ff,0 0 48px #0ff,0 0 96px #0ff; }
+.title-gradient{ background:linear-gradient(90deg,#2563eb,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 2px 6px rgba(0,0,0,0.08); }
+
+.btn-futuristic{ @apply font-bold py-3 px-8 rounded-lg bg-gradient-to-r shadow-xl transition-all duration-300 transform hover:scale-110 border bg-opacity-90; }
+
+/* Scrollbar bleue */
+:deep(.scrollbox){ scrollbar-width:thin; scrollbar-color:#3b82f6 transparent; }
+:deep(.scrollbox:hover){ scrollbar-color:#2563eb transparent; }
+:deep(.scrollbox::-webkit-scrollbar){ width:8px; }
+:deep(.scrollbox::-webkit-scrollbar-thumb){ background-color:#3b82f6; border-radius:9999px; border:2px solid transparent; background-clip:padding-box; }
+:deep(.scrollbox:hover::-webkit-scrollbar-thumb){ background-color:#2563eb; }
+
+.social-btn { @apply text-sm px-3 py-1 rounded-lg border-2 transition-colors duration-200; }
+</style>

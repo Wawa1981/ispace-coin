@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* === Themes safelist === */
+.theme-indigo {
+  @apply bg-gradient-to-br from-indigo-900 via-purple-900 to-black;
+}
+.theme-blue {
+  @apply bg-gradient-to-b from-blue-950 via-slate-900 to-black;
+}
+.theme-fuchsia {
+  @apply bg-gradient-to-tr from-fuchsia-900 via-purple-900 to-black;
+}
+
