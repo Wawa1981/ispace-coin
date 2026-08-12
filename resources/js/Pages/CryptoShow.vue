@@ -30,7 +30,7 @@
     </div>
 
     <footer class="w-full p-6 text-center text-sm opacity-70 mt-8 border-t border-gray-800">
-      © 2015 CryptoBank — Tous droits réservés. | 
+      © 2015 iSpaceCoin — Tous droits réservés. | 
       <a href="#" class="hover:underline">Conditions d'utilisation</a> | 
       <a href="#" class="hover:underline">Politique de confidentialité</a>
     </footer>

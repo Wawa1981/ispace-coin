@@ -295,37 +295,15 @@ td {
 }
 
 :deep(.scrollbox) {
-  scrollbar-width: thin;
-  scrollbar-color: #3b82f6 transparent;
-  scrollbar-gutter: stable both-edges;
-}
-
-:deep(.scrollbox:hover) {
-  scrollbar-color: #2563eb transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-gutter: auto;
 }
 
 :deep(.scrollbox::-webkit-scrollbar) {
-  width: 8px;
-  height: 8px;
-}
-
-:deep(.scrollbox::-webkit-scrollbar-track) {
-  background: transparent;
-}
-
-:deep(.scrollbox::-webkit-scrollbar-thumb) {
-  background-color: #3b82f6;
-  border-radius: 9999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-:deep(.scrollbox:hover::-webkit-scrollbar-thumb) {
-  background-color: #2563eb;
-}
-
-:deep(.scrollbox::-webkit-scrollbar-corner) {
-  background: transparent;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .neon-text-night {

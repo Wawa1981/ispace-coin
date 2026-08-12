@@ -7,7 +7,7 @@
         class="backdrop-blur-lg rounded-2xl shadow-xl ring-1 ring-white/10 overflow-hidden">
 
         <div class="flex items-center justify-between px-6 py-4">
-          <h2 class="text-lg md:text-xl font-bold">Coin$ Tracker</h2>
+          <h2 class="text-lg md:text-xl font-bold">Cours des cryptos</h2>
           <div class="flex items-center gap-3 md:gap-4">
             <input v-model="query" type="text" placeholder="Rechercher une crypto…"
               class="hidden md:block rounded-lg px-3 py-2 bg-transparent ring-1 ring-white/10 focus:outline-none"
@@ -37,7 +37,13 @@
                 <td class="px-4 py-3 text-sm opacity-80">{{ i + 1 }}</td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <img :src="c.image" alt="" class="w-6 h-6 rounded-full" />
+                    <img
+                      :src="c.image"
+                      alt=""
+                      class="w-6 h-6 rounded-full"
+                      loading="lazy"
+                      @error="onImgError"
+                    />
                     <div class="flex flex-col">
                       <span class="text-sm font-medium">{{ c.name }}</span>
                       <span class="text-xs opacity-70">{{ c.symbol?.toUpperCase() }}</span>
@@ -55,7 +61,10 @@
           </table>
         </div>
 
-        <div class="px-6 py-4 text-xs opacity-70">Données CoinGecko — actualisées périodiquement.</div>
+        <div class="px-6 py-4 text-xs opacity-70">
+          Cours multi-source (CoinGecko / CryptoCompare / Binance…) — actualisés périodiquement.
+          <span v-if="!markets?.length" class="ml-1 opacity-80">Chargement…</span>
+        </div>
       </div>
     </div>
   </section>
@@ -87,6 +96,13 @@ const filteredMarkets = computed(() => {
 function toggleTableCollapse() { isTableCollapsed.value = !isTableCollapsed.value }
 function goCoin(id) { router.visit(`/crypto/${id}`) }
 
+function onImgError(e) {
+  // Une seule fois → placeholder neutre (jamais une autre crypto)
+  if (e.target.dataset.fb === '1') return
+  e.target.dataset.fb = '1'
+  e.target.src = '/image/coins/default.svg'
+}
+
 // Les fonctions de formatage
 function fmtCurrency(v) { return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'USD' }).format(v ?? 0) }
 function fmtPercent(v) { if (v == null || Number.isNaN(v)) return '—'; return `${Number(v).toFixed(2)}%` }
@@ -94,10 +110,16 @@ function fmtCompact(v) { if (v == null) return '—'; return new Intl.NumberForm
 </script>
 
 <style scoped>
-/* Scrollbar styles */
+/* Scrollbar invisible dans le tableau */
 :deep(.scrollbox) {
-  scrollbar-width: thin;
-  scrollbar-color: #3b82f6 transparent;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-gutter: auto;
+}
+
+:deep(.scrollbox::-webkit-scrollbar) {
+  width: 0;
+  height: 0;
+  display: none;
 }
 </style>

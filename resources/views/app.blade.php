@@ -4,14 +4,14 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'CRYPTOBANK') }}</title>
+        <title inertia>{{ config('app.name', 'iSpaceCoin') }}</title>
 
          <!-- CSRF Token -->
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600|space-grotesk:400,500,600,700|orbitron:600,700,800&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes

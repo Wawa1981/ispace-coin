@@ -69,7 +69,7 @@ app.post('/api/v2/create-eth-wallet', async (req, res) => {
     const coin = bitgo.coin('hteth');
 
     const wallet = await coin.wallets().generateWallet({
-      label: 'CryptoBank ETH Test',
+      label: 'iSpaceCoin ETH Test',
       passphrase: process.env.BITGO_WALLET_PASSPHRASE,
       enterprise: process.env.BITGO_ENTERPRISE_ID,
       walletVersion: 6,

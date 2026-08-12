@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 final class CoinGeckoRestService
 {
@@ -19,11 +20,29 @@ final class CoinGeckoRestService
 
     private function client()
     {
-        $req = Http::timeout($this->timeout);
+        $req = Http::timeout($this->timeout)->acceptJson();
         if ($this->proKey && str_contains($this->baseUrl, 'pro-api.coingecko.com')) {
-            $req = $req->withHeaders(['x-cg-pro-api-key' => $this->proKey]); // Auth Pro
+            $req = $req->withHeaders(['x-cg-pro-api-key' => $this->proKey]);
         }
         return $req;
+    }
+
+    private function assertOk($resp, string $context): array
+    {
+        if (!$resp->successful()) {
+            throw new RuntimeException("CoinGecko {$context}: HTTP {$resp->status()}");
+        }
+        $json = $resp->json();
+        if (!is_array($json)) {
+            throw new RuntimeException("CoinGecko {$context}: invalid JSON");
+        }
+        // Rate-limit / error envelope
+        if (isset($json['status']['error_code'])) {
+            $code = $json['status']['error_code'];
+            $msg  = $json['status']['error_message'] ?? 'error';
+            throw new RuntimeException("CoinGecko {$context}: error {$code} — {$msg}");
+        }
+        return $json;
     }
 
     /** 1) Prix simple: /simple/price */
@@ -32,16 +51,15 @@ final class CoinGeckoRestService
         $resp = $this->client()->get("{$this->baseUrl}/simple/price", [
             'ids' => implode(',', $ids),
             'vs_currencies' => implode(',', $vsCurrencies),
-            // options utiles: include_market_cap, include_24hr_vol, include_24hr_change
         ]);
-        return $resp->json() ?? [];
+        return $this->assertOk($resp, 'simple/price');
     }
 
     /** 2) Trending search: /search/trending */
     public function getTrending(): array
     {
         $resp = $this->client()->get("{$this->baseUrl}/search/trending");
-        return $resp->json() ?? [];
+        return $this->assertOk($resp, 'trending');
     }
 
     /** 3) Markets list: /coins/markets */
@@ -55,18 +73,21 @@ final class CoinGeckoRestService
             'sparkline' => 'false',
             'price_change_percentage' => '1h,24h,7d',
         ]);
-        return $resp->json() ?? [];
+        $json = $this->assertOk($resp, 'markets');
+        if (!array_is_list($json)) {
+            throw new RuntimeException('CoinGecko markets: expected list');
+        }
+        return $json;
     }
 
     /** 4) OHLC (bougies): /coins/{id}/ohlc */
     public function getOHLC(string $id, string $vsCurrency = 'usd', int $days = 1): array
     {
-        // days: 1, 7, 14, 30, 90, 180, 365, max
         $resp = $this->client()->get("{$this->baseUrl}/coins/{$id}/ohlc", [
             'vs_currency' => $vsCurrency,
             'days' => $days,
         ]);
-        return $resp->json() ?? [];
+        return $this->assertOk($resp, "ohlc/{$id}");
     }
 
     /** 5) Market Chart: /coins/{id}/market_chart */
@@ -76,6 +97,6 @@ final class CoinGeckoRestService
             'vs_currency' => $vsCurrency,
             'days'        => $days,
         ]);
-        return $resp->json() ?? [];
+        return $this->assertOk($resp, "market_chart/{$id}");
     }
 }

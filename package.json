@@ -51,6 +51,7 @@
         "date-fns": "^4.1.0",
         "dotenv": "^17.2.3",
         "express": "^5.1.0",
+        "hls.js": "^1.6.18",
         "laravel-vite-plugin": "^1.0",
         "lightweight-charts": "^4.2.3",
         "lucide-vue-next": "^0.468.0",
@@ -69,5 +70,6 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
-    }
+    },
+    "name": "ispace-coin"
 }

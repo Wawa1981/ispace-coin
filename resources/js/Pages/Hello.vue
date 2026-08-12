@@ -7,6 +7,9 @@
 
       <Ticker />
 
+      <!-- Popup actu vidéo (style BFM / médias) -->
+      <VideoNewsPopup :is-light="isLight" />
+
       <!-- Barre du haut -->
       <div class="absolute top-8 left-4 z-40 flex gap-3">
         <Link :href="route('login')" 
@@ -22,25 +25,52 @@
       <!-- Switcher à droite -->
       <ThemeSwitcher />
 
-      <!-- Section titre + tableau -->
-      <section class="min-h-[19vh] md:min-h-[16vh] flex flex-col items-center justify-center text-center px-4">
-        <h1 :class="['text-5xl md:text-6xl font-extrabold animate-rotateY', titleClass]">
-          Wallet Cryptobank
+      <!-- Brand wordmark : même taille + épaisseur 3D (extrusion Z) -->
+      <section class="brand-stage min-h-[22vh] md:min-h-[20vh] flex flex-col items-center justify-center text-center px-4 py-6">
+        <h1
+          class="brand-wordmark brand-wordmark--spin"
+          :class="isLight ? 'brand-wordmark--light' : 'brand-wordmark--dark'"
+          aria-label="iSpaceCoin"
+        >
+          <!-- Tranches d’épaisseur (1px chacune) — pas plus grand, pas étiré -->
+          <span
+            v-for="z in thicknessLayers"
+            :key="z"
+            class="brand-slice"
+            :class="{ 'brand-slice--face': z === 0 }"
+            :style="{ '--z': z }"
+            :aria-hidden="z !== 0"
+          >
+            <span class="brand-wordmark__i">i</span><span class="brand-wordmark__space">Space</span><span class="brand-wordmark__coin">Coin</span>
+          </span>
         </h1>
+        <p class="brand-tagline" :class="isLight ? 'brand-tagline--light' : 'brand-tagline--dark'">
+          <span class="brand-tagline__info">Info</span>
+          <span class="brand-tagline__dot">·</span>
+          <span class="brand-tagline__space">Space</span>
+          <span class="brand-tagline__dot">·</span>
+          <span class="brand-tagline__coin">Coin</span>
+        </p>
+        <p class="hero-pitch" :class="bodyTextClass">
+          Toutes les infos finance &amp; crypto des meilleurs sites d’actualité —
+          <strong>un seul espace</strong>, plus besoin de jongler entre les onglets.
+        </p>
       </section>
 
-      <CryptoTable
-          :markets="markets"
-          :isLight="isLight"
-          :titleClass="titleClass" 
-      />
+      <!-- Actus + cours : même conteneur max-w-5xl / px-4 pour l’alignement -->
+      <NewsCarousel @toggle-markets="showMarkets = !showMarkets" />
 
-      <!-- Widgets déplacés sous le tableau -->
-      <div class="mt-10">
-        <NewsCarousel />
-      </div>
+      <section id="markets" class="max-w-5xl mx-auto px-4 mb-4">
+        <div v-show="showMarkets" class="markets-panel">
+          <CryptoTable
+            :markets="markets"
+            :isLight="isLight"
+            :titleClass="titleClass"
+          />
+        </div>
+      </section>
 
-       <section id="prevention" :class="isLight ? 'bg-white/80' : 'bg-black/40'" class="py-20">
+      <section id="prevention" :class="isLight ? 'bg-white/80' : 'bg-black/40'" class="pt-8 pb-16">
         <div class="max-w-3xl mx-auto px-6 leading-relaxed" :class="bodyTextClass">
           <h2 class="text-3xl font-bold mb-6">⚠ Alerte : Manipulation des Marchés Crypto – Ce que vous devez savoir</h2>
           <p class="mb-4">
@@ -130,54 +160,222 @@
         </div>
       </section>
 
-      <!-- Footer -->
-      <footer :class="isLight ? 'bg-white' : 'bg-black/60'" class="py-10">
-        <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4" :class="bodyTextClass">
-          <p class="opacity-80">© {{ new Date().getFullYear() }} CryptoBank — Tous droits réservés.</p>
-          <div class="flex items-center gap-3">
-            <a href="#" class="social-btn" :class="socialBtnClass" aria-label="Facebook">📘 Facebook</a>
-            <a href="#" class="social-btn" :class="socialBtnClass" aria-label="Telegram">✈ Telegram</a>
-            <a href="#" class="social-btn" :class="socialBtnClass" aria-label="GitHub">🐙 GitHub</a>
-            <a href="#top" class="social-btn" :class="socialBtnClass" aria-label="Haut de page">⬆ Haut</a>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter :is-light="isLight" @open-markets="showMarkets = true" />
     </main>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
 
-// Importation des composants
 import Ticker from '@/Components/Ticker.vue'
 import Starfield from '@/Components/Starfield.vue'
 import CryptoTable from '@/Components/CryptoTable.vue'
 import NewsCarousel from '@/Components/NewsCarousel.vue'
-import ThemeSwitcher from '@/Components/ThemeSwitcher.vue' 
+import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
+import VideoNewsPopup from '@/Components/VideoNewsPopup.vue'
+import SiteFooter from '@/Components/SiteFooter.vue'
 
-// Importation des composables
 import { useTheme } from '@/composables/useTheme'
 import { useCryptoMarkets } from '@/composables/useCryptoMarkets'
 
-// Utilisation des composables
-const { isLight, bgClass, textClass, titleClass, bodyTextClass, btnBorderClass, socialBtnClass, toggleLight, cycleDarkTheme } = useTheme()
+const { isLight, bgClass, textClass, titleClass, bodyTextClass, btnBorderClass, socialBtnClass } = useTheme()
 const { markets } = useCryptoMarkets()
+
+const showMarkets = ref(false)
+const thicknessLayers = Array.from({ length: 16 }, (_, i) => i)
 </script>
 
 <style scoped>
-/* Les styles spécifiques à cette page sont conservés ici */
 .has-ticker { --ticker-h: 48px; }
 @media (min-width:768px){ .has-ticker { --ticker-h:56px; } }
 
-@keyframes rotateY {0%{transform:rotateY(0);}100%{transform:rotateY(360deg);} }
-.animate-rotateY{ animation:rotateY 10s linear infinite; display:inline-block; transform-style:preserve-3d; }
+.brand-stage {
+  perspective: 900px;
+  perspective-origin: 50% 50%;
+}
 
-.neon-text-night{ text-shadow:0 0 6px #fff,0 0 12px #0ff,0 0 24px #0ff,0 0 48px #0ff,0 0 96px #0ff; }
-.title-gradient{ background:linear-gradient(90deg,#2563eb,#a855f7);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 2px 6px rgba(0,0,0,0.08); }
+.brand-wordmark {
+  font-family: 'Orbitron', 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.75rem, 8vw, 5.5rem);
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  margin: 0;
+  display: inline-block;
+  position: relative;
+  user-select: none;
+  transform-style: preserve-3d;
+  /* largeur/hauteur = une seule face (les tranches sont empilées en Z) */
+}
 
-.btn-futuristic{ @apply font-bold py-3 px-8 rounded-lg bg-gradient-to-r shadow-xl transition-all duration-300 transform hover:scale-110 border bg-opacity-90; }
+/* Pause 3s face + 3s verso */
+@keyframes brand-rotateY {
+  0%,
+  18.75% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+  68.75% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
 
-.social-btn { @apply text-sm px-3 py-1 rounded-lg border-2 transition-colors duration-200; }
+.brand-wordmark--spin {
+  animation: brand-rotateY 16s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* Une tranche = même texte, décalé de 1px en profondeur */
+.brand-slice {
+  display: block;
+  white-space: nowrap;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--z) * -1px));
+}
+
+/* Tranches arrière superposées */
+.brand-slice:not(.brand-slice--face) {
+  position: absolute;
+  left: 0;
+  top: 0;
+  filter: brightness(0.72);
+}
+
+.brand-slice--face {
+  position: relative;
+  z-index: 2;
+}
+
+.brand-wordmark__i {
+  font-weight: 700;
+  background: linear-gradient(135deg, #22d3ee 0%, #67e8f9 45%, #a5f3fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-right: 0.02em;
+}
+
+.brand-wordmark__space {
+  background: linear-gradient(100deg, #e0f2fe 0%, #ffffff 40%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark__coin {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: linear-gradient(100deg, #818cf8 0%, #c084fc 50%, #f0abfc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* glow sur la face seulement — filter sur le parent casse le preserve-3d */
+.brand-wordmark--dark .brand-slice--face {
+  filter: drop-shadow(0 0 24px rgba(34, 211, 238, 0.35))
+          drop-shadow(0 0 48px rgba(129, 140, 248, 0.2));
+}
+
+.brand-wordmark--light .brand-wordmark__i {
+  background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark--light .brand-wordmark__space {
+  background: linear-gradient(100deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark--light .brand-wordmark__coin {
+  background: linear-gradient(100deg, #4f46e5 0%, #7c3aed 55%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-wordmark--light .brand-slice--face {
+  filter: drop-shadow(0 2px 12px rgba(15, 23, 42, 0.12));
+}
+
+.brand-wordmark--light .brand-slice:not(.brand-slice--face) {
+  filter: brightness(0.85);
+}
+
+.brand-tagline {
+  /* Même police que le logo (Orbitron) */
+  font-family: 'Orbitron', 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  margin-top: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55em;
+}
+
+.brand-tagline__dot {
+  opacity: 0.5;
+  letter-spacing: 0;
+}
+
+/* Couleurs alignées sur i / Space / Coin du logo */
+.brand-tagline--dark .brand-tagline__info {
+  color: #67e8f9;
+}
+.brand-tagline--dark .brand-tagline__space {
+  color: #e2e8f0;
+}
+.brand-tagline--dark .brand-tagline__coin {
+  color: #c4b5fd;
+}
+
+.brand-tagline--light .brand-tagline__info {
+  color: #0891b2;
+}
+.brand-tagline--light .brand-tagline__space {
+  color: #1e293b;
+}
+.brand-tagline--light .brand-tagline__coin {
+  color: #7c3aed;
+}
+
+.hero-pitch {
+  max-width: 34rem;
+  margin: 1rem auto 0;
+  font-size: clamp(0.9rem, 2vw, 1.05rem);
+  line-height: 1.55;
+  opacity: 0.88;
+}
+
+.markets-panel {
+  animation: panel-in 0.25s ease;
+}
+
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.btn-futuristic {
+  @apply font-bold py-3 px-8 rounded-lg bg-gradient-to-r shadow-xl transition-all duration-300 transform hover:scale-110 border bg-opacity-90;
+}
+
+.social-btn {
+  @apply text-sm px-3 py-1 rounded-lg border-2 transition-colors duration-200;
+}
 </style>
                      

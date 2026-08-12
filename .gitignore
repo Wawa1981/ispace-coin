@@ -48,3 +48,6 @@ yarn-error.log
 /User.php
 app/Models/-
 app/Models/getBalanceFloat
+
+# DB dumps
+/storage/backups/

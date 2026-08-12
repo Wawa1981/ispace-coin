@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\BalanceController;
 use App\Http\Controllers\OnchainController;
 use App\Http\Controllers\CoinGeckoController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\TvController;
 use App\Http\Controllers\Api\AuthController;
 
 /*
@@ -33,6 +35,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
 // Route publique (bandeau ticker)
 Route::get('/crypto-prices', [CoinGeckoController::class, 'ticker']);
+
+// Actus (proxy + cache serveur — évite rate-limit CryptoCompare côté navigateur)
+Route::get('/news', [NewsController::class, 'index']);
+
+// TV live YouTube — résout le vrai videoId (live_stream?channel= est trop fragile)
+Route::get('/tv/live', [TvController::class, 'live']);
 
 // CoinGecko REST public endpoints
 Route::get('/markets',   [CoinGeckoController::class, 'markets']);

@@ -5,86 +5,118 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Services\CoinGeckoRestService;
+use App\Services\CryptoPriceService;
+use App\Services\MarketTickerService;
 
 class CoinGeckoController extends Controller
 {
-    /** Top N marchés (liste comme ta capture) */
-    public function markets(Request $request, CoinGeckoRestService $svc)
+    /** Top N marchés — multi-source + last-good (jamais d'écran vide) */
+    public function markets(Request $request, CryptoPriceService $prices)
     {
         $vs   = $request->query('vs', 'usd');
-        $size = (int) $request->query('per_page', 10);
-        $page = (int) $request->query('page', 1);
+        $size = max(1, min(250, (int) $request->query('per_page', 10)));
+        $page = max(1, (int) $request->query('page', 1));
 
-        $key  = "cg:markets:{$vs}:{$size}:{$page}";
-        $data = Cache::remember($key, 30, fn () => $svc->getMarkets($vs, $size, $page));
+        $result = $prices->getMarkets($vs, $size, $page);
 
-        return response()->json($data);
+        // Compat front existant: corps = liste de coins
+        // Headers pour debug / indicateur stale côté client
+        return response()
+            ->json($result['data'])
+            ->header('X-Price-Source', $result['source'] ?? 'none')
+            ->header('X-Price-Stale', ($result['stale'] ?? false) ? '1' : '0')
+            ->header('X-Price-Fetched-At', (string) ($result['fetched_at'] ?? ''));
     }
 
     /** Prix spot multi-IDs (pour valoriser un portefeuille) */
-    public function price(Request $request, CoinGeckoRestService $svc)
+    public function price(Request $request, CryptoPriceService $prices)
     {
         $ids = array_filter(array_map('trim', explode(',', $request->query('ids', 'bitcoin,ethereum'))));
         $vs  = array_filter(array_map('trim', explode(',', $request->query('vs', 'usd'))));
 
-        $key  = 'cg:price:' . md5(json_encode([$ids, $vs]));
-        $data = Cache::remember($key, 20, fn () => $svc->getSimplePrice($ids, $vs));
+        $result = $prices->getSimplePrice($ids, $vs);
 
-        return response()->json($data);
+        return response()
+            ->json($result['data'])
+            ->header('X-Price-Source', $result['source'] ?? 'none')
+            ->header('X-Price-Stale', ($result['stale'] ?? false) ? '1' : '0');
     }
 
-    /** Bougies OHLC (pour les graphiques chandeliers) */
+    /** Bougies OHLC (pour les graphiques chandeliers) — CoinGecko only + last-good */
     public function ohlc(string $id, Request $request, CoinGeckoRestService $svc)
     {
         $vs   = $request->query('vs', 'usd');
-        $days = (int) $request->query('days', 1); // 1,7,14,30,90,180,365,max
+        $days = (int) $request->query('days', 1);
 
-        $key  = "cg:ohlc:{$id}:{$vs}:{$days}";
-        $data = Cache::remember($key, 30, fn () => $svc->getOHLC($id, $vs, $days));
+        $freshKey = "cg:ohlc:{$id}:{$vs}:{$days}";
+        $lastKey  = "cg:ohlc:last_good:{$id}:{$vs}:{$days}";
+
+        $data = Cache::get($freshKey);
+        if ($data === null) {
+            try {
+                $data = $svc->getOHLC($id, $vs, $days);
+                if (is_array($data) && !empty($data) && array_is_list($data)) {
+                    Cache::put($freshKey, $data, 60);
+                    Cache::put($lastKey, $data, 86400);
+                } else {
+                    $data = Cache::get($lastKey, []);
+                }
+            } catch (\Throwable $e) {
+                $data = Cache::get($lastKey, []);
+            }
+        }
 
         return response()->json($data);
     }
 
-    /** Bandeau défilant (ce que consomme ton Hello.vue: /api/crypto-prices) */
-    public function ticker(CoinGeckoRestService $svc)
+    /**
+     * Bandeau défilant — crypto + devises fiat + actions.
+     * Multi-source + last-good par segment (pas de coupure UI).
+     */
+    public function ticker(MarketTickerService $ticker)
     {
-        // On prend le top 15 marchés USD et on ne renvoie que les champs nécessaires au ticker
-        $data = Cache::remember('cg:ticker:usd:15', 20, fn () => $svc->getMarkets('usd', 15, 1));
-
-        $minimal = array_map(function ($c) {
-            return [
-                'id'              => $c['id'] ?? null,
-                'name'            => $c['name'] ?? null,
-                'symbol'          => $c['symbol'] ?? null,
-                'current_price'   => $c['current_price'] ?? null,
-                'price_change_percentage_24h' => $c['price_change_percentage_24h'] ?? null,
-                'image'           => $c['image'] ?? null,
-            ];
-        }, is_array($data) ? $data : []);
+        $board = $ticker->getBoard();
+        $items = $board['items'] ?? [];
 
         return response()->json([
-            'success' => true,
-            'prices'  => $minimal,
+            'success'    => !empty($items),
+            'prices'     => $items, // compat front (liste d'items)
+            'items'      => $items,
+            'sources'    => $board['sources'] ?? [],
+            'stale'      => (bool) ($board['stale'] ?? false),
+            'fetched_at' => $board['fetched_at'] ?? null,
         ]);
     }
 
-    /** Market chart (historique prix pour graphiques) */
+    /** Market chart (historique prix pour graphiques) — CoinGecko + last-good */
     public function marketChart(Request $request, CoinGeckoRestService $svc)
     {
-        // 💡 L'ancienne ligne : $coinId = $request->query('coinId', 'bitcoin');
-        // 🏆 La nouvelle ligne, qui retire la valeur par défaut pour accepter n'importe quel ID.
         $coinId = $request->query('coinId');
 
-        // Ajout d'une vérification pour s'assurer que l'ID est bien présent
         if (!$coinId) {
             return response()->json(['error' => 'Missing coinId parameter'], 400);
         }
 
-        $vs     = $request->query('vs', 'usd');
-        $days   = (int) $request->query('days', 30);
+        $vs   = $request->query('vs', 'usd');
+        $days = (int) $request->query('days', 30);
 
-        $key    = "cg:market_chart:{$coinId}:{$vs}:{$days}";
-        $data = Cache::remember($key, 30, fn () => $svc->getMarketChart($coinId, $vs, $days));
+        $freshKey = "cg:market_chart:{$coinId}:{$vs}:{$days}";
+        $lastKey  = "cg:market_chart:last_good:{$coinId}:{$vs}:{$days}";
+
+        $data = Cache::get($freshKey);
+        if ($data === null) {
+            try {
+                $data = $svc->getMarketChart($coinId, $vs, $days);
+                if (is_array($data) && !empty($data['prices'] ?? $data)) {
+                    Cache::put($freshKey, $data, 60);
+                    Cache::put($lastKey, $data, 86400);
+                } else {
+                    $data = Cache::get($lastKey, ['prices' => [], 'market_caps' => [], 'total_volumes' => []]);
+                }
+            } catch (\Throwable $e) {
+                $data = Cache::get($lastKey, ['prices' => [], 'market_caps' => [], 'total_volumes' => []]);
+            }
+        }
 
         return response()->json($data);
     }

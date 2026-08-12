@@ -18,7 +18,7 @@
 
       <div class="flex flex-col items-center justify-center w-full min-h-[calc(100vh-14rem)]">
         <h1 :class="['text-3xl font-extrabold text-center mb-8', titleClass]">
-          Envoyer - CryptoBank
+          Envoyer - iSpaceCoin
         </h1>
 
         <div class="mb-8">

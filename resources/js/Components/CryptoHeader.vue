@@ -1,11 +1,10 @@
 <template>
   <header class="w-full p-12 flex flex-col md:flex-row justify-between items-center z-10 gap-4">
     <div class="flex items-center gap-4">
-      <!-- Logo local -->
       <img
-        :src="`/image/coins/${coinId.toLowerCase()}.png`"
+        :src="iconSrc"
         :alt="coinId"
-        class="w-10 h-10"
+        class="w-10 h-10 rounded-full bg-slate-800 object-cover"
         @error="onImageError"
       />
 
@@ -16,7 +15,7 @@
         <p class="text-xl font-semibold">
           {{ currentPrice ? fmtCurrency(currentPrice) : '...' }}
           <span :class="ohlcInfo.change >= 0 ? 'text-green-500' : 'text-red-500'">
-            ({{ ohlcInfo.change >= 0 ? '+' : ''}}{{ ohlcInfo.change.toFixed(2) }}%)
+            ({{ ohlcInfo.change >= 0 ? '+' : '' }}{{ ohlcInfo.change.toFixed(2) }}%)
           </span>
         </p>
       </div>
@@ -34,25 +33,72 @@
 </template>
 
 <script setup>
+import { ref, watch, onMounted } from 'vue'
 
 const props = defineProps({
   coinId: { type: String, required: true },
   currentPrice: { type: Number, default: null },
   ohlcInfo: {
     type: Object,
-    default: () => ({ open: 0, high: 0, low: 0, close: 0, change: 0 })
-  }
+    default: () => ({ open: 0, high: 0, low: 0, close: 0, change: 0 }),
+  },
 })
 
-// Fallback vers un logo générique si l’image n’existe pas
-function onImageError(e) {
-  e.target.src = '/image/coins/default.png' // crée un default.png pour éviter les erreurs
+const NEUTRAL = '/image/coins/default.svg'
+const iconSrc = ref(NEUTRAL)
+const stage = ref(0) // 0=coingecko, 1=local, 2=neutral done
+
+async function resolveIcon(id) {
+  stage.value = 0
+  const coinId = String(id || '').toLowerCase()
+
+  // 1) Vraie image CoinGecko via notre API markets
+  try {
+    const res = await fetch(`/api/markets?vs=usd&per_page=250&page=1`, { cache: 'force-cache' })
+    if (res.ok) {
+      const data = await res.json()
+      const list = Array.isArray(data) ? data : []
+      const coin = list.find((c) => c.id === coinId || c.symbol?.toLowerCase() === coinId)
+      if (coin?.image) {
+        iconSrc.value = coin.image
+        return
+      }
+    }
+  } catch (_) {
+    /* ignore */
+  }
+
+  // 2) Fichier local si on l’a vraiment (bitcoin, ethereum, …)
+  stage.value = 1
+  iconSrc.value = `/image/coins/${coinId}.png`
 }
+
+function onImageError() {
+  if (stage.value === 0) {
+    // CoinGecko a échoué → essai local
+    stage.value = 1
+    iconSrc.value = `/image/coins/${String(props.coinId).toLowerCase()}.png`
+    return
+  }
+  if (stage.value === 1) {
+    // Local absent → placeholder neutre (PAS le logo bitcoin)
+    stage.value = 2
+    iconSrc.value = NEUTRAL
+  }
+}
+
+watch(
+  () => props.coinId,
+  (id) => resolveIcon(id),
+  { immediate: true },
+)
+
+onMounted(() => resolveIcon(props.coinId))
 
 function fmtCurrency(v) {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'USD',
   }).format(v ?? 0)
 }
 </script>

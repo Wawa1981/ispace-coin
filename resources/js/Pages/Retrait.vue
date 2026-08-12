@@ -25,7 +25,7 @@
         <div class="max-w-5xl mx-auto px-4">
           <div class="flex items-center justify-center">
             <h1 :class="['text-3xl md:text-4xl font-extrabold mb-6 text-center', titleClass]">
-              Retrait - CryptoBank
+              Retrait - iSpaceCoin
             </h1>
           </div>
 

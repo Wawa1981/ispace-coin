@@ -9,7 +9,7 @@
       
       <div class="flex justify-center">
         <div class="w-14 h-14 rounded-full flex items-center justify-center shadow-lg animate-pulse"
-          :class="isLight ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-gradient-to-r from-cyan-400 to-blue-600'">
+          :class="isLight ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-gradient-to-r from-blue-600 to-purple-600'">
           <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zm0 0v10" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M2 17l10 5 10-5" />
@@ -18,7 +18,7 @@
         </div>
       </div>
 
-      <h2 :class="['text-center text-3xl font-extrabold', titleClass, 'neon-text']">Register to CryptoBank</h2>
+      <h2 :class="['text-center text-3xl font-extrabold', titleClass, 'neon-text']">Register to iSpaceCoin</h2>
       
       <form @submit.prevent="submit" class="mt-8 space-y-6">
         <div class="space-y-4">
@@ -80,4 +80,3 @@ const submit = () => {
   text-shadow: 0 0 5px #fff, 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
 }
 </style>
-

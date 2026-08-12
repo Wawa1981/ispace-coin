@@ -62,7 +62,7 @@
             titleClass
           ]"
         >
-          Tableau de bord CryptoBank
+          Tableau de bord iSpaceCoin
         </h1>
 
         <!-- Composant des soldes -->

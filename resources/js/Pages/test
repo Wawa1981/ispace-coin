@@ -30,7 +30,7 @@
 
       <!-- Wallet -->
       <section class="min-h-[36vh] md:min-h-[34vh] flex flex-col items-center justify-center text-center px-4">
-        <h1 :class="['text-5xl md:text-6xl font-extrabold animate-rotateY', titleClass]">Wallet Cryptobank</h1>
+        <h1 :class="['text-5xl md:text-6xl font-extrabold animate-rotateY', titleClass]">Wallet iSpaceCoin</h1>
         <div class="mt-8 flex gap-6">
           <Link :href="route('login')" :class="['btn-futuristic from-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-600', btnBorderClass]">login</Link>
           <Link :href="route('register')" :class="['btn-futuristic from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600', btnBorderClass]">Register</Link>
