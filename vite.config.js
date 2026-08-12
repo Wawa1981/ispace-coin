@@ -6,7 +6,13 @@ export default defineConfig({
     plugins: [
         laravel({
             input: 'resources/js/app.js',
-            refresh: true,
+            // Refresh ciblé — évite de watcher tout le monorepo / vendor
+            refresh: [
+                'resources/views/**',
+                'resources/js/**',
+                'routes/**',
+                'app/Http/**',
+            ],
         }),
         vue({
             template: {
@@ -24,6 +30,16 @@ export default defineConfig({
         strictPort: true,
         hmr: {
             host: '127.0.0.1',
+        },
+        watch: {
+            // Ne pas watcher vendor / storage / etc. (évite ENOSPC inotify)
+            ignored: [
+                '**/node_modules/**',
+                '**/vendor/**',
+                '**/storage/**',
+                '**/public/build/**',
+                '**/.git/**',
+            ],
         },
     },
 });
