@@ -1,8 +1,9 @@
 <template>
-  <div :class="[bgClass, textClass]" class="min-h-screen relative overflow-x-hidden transition-colors duration-700 flex">
+  <div :class="[bgClass, textClass]" class="min-h-screen relative overflow-x-hidden transition-colors duration-700 flex flex-col">
     
     <Starfield />
 
+    <div class="page-body flex flex-1 min-h-0 w-full">
     <Sidebar 
       :isSidebarOpen="isSidebarOpen"
       :isLight="isLight"
@@ -52,6 +53,9 @@
       </section>
 
     </main>
+
+    </div>
+    <SiteFooter :is-light="isLight" />
   </div>
 </template>
 
@@ -59,6 +63,7 @@
 import { ref, computed } from 'vue'
 
 // Importation des composants
+import SiteFooter from '@/Components/SiteFooter.vue'
 import Sidebar from '@/Components/Sidebar.vue'
 import Starfield from '@/Components/Starfield.vue'
 import Ticker from '@/Components/Ticker.vue'

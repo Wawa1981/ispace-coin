@@ -29,11 +29,7 @@
       </main>
     </div>
 
-    <footer class="w-full p-6 text-center text-sm opacity-70 mt-8 border-t border-gray-800">
-      © 2015 iSpaceCoin — Tous droits réservés. | 
-      <a href="#" class="hover:underline">Conditions d'utilisation</a> | 
-      <a href="#" class="hover:underline">Politique de confidentialité</a>
-    </footer>
+    <SiteFooter :is-light="isLight" />
   </div>
 </template>
 
@@ -42,6 +38,7 @@ import { ref } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import { useTheme } from '@/composables/useTheme'
 
+import SiteFooter from '@/Components/SiteFooter.vue'
 import Starfield from '@/Components/Starfield.vue'
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import Ticker from '@/Components/Ticker.vue'

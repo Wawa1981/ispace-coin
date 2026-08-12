@@ -2,12 +2,14 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import { Head, Link, useForm } from '@inertiajs/vue3'
+import SiteFooter from '@/Components/SiteFooter.vue'
+import { useTheme } from '@/composables/useTheme'
 
+const { isLight } = useTheme()
 const props = defineProps({ status: String })
 const form = useForm({})
 const submit = () => form.post(route('verification.send'))
 const verificationLinkSent = computed(() => props.status === 'verification-link-sent')
-
 // étoiles
 const canvasRef = ref(null)
 onMounted(() => {
@@ -52,40 +54,41 @@ onMounted(() => {
   </div>
 
   <!-- CONTENU -->
-  <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="max-w-lg w-full text-white">
-      <!-- Logo -->
-      <div class="flex justify-center mb-6">
-        <div class="w-14 h-14 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zm0 0v10" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2 17l10 5 10-5" />
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2 12l10 5 10-5" />
-          </svg>
-        </div>
-      </div>
-
-      <!-- Carte sombre translucide -->
-      <div class="bg-white/5 backdrop-blur-md rounded-2xl ring-1 ring-white/10 p-6 shadow-2xl">
-        <div class="mb-4 text-sm leading-relaxed">
-          Merci pour votre inscription ! Avant de commencer, vérifiez votre adresse e-mail en cliquant sur le lien que nous venons de vous envoyer.
-          Si vous ne l’avez pas reçu, nous pouvons vous en renvoyer un.
+  <div class="min-h-screen flex flex-col">
+    <div class="flex-1 flex items-center justify-center px-4 py-12">
+      <div class="max-w-lg w-full text-white">
+        <div class="flex justify-center mb-6">
+          <div class="w-14 h-14 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 2L2 7l10 5 10-5-10-5zm0 0v10" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2 17l10 5 10-5" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2 12l10 5 10-5" />
+            </svg>
+          </div>
         </div>
 
-        <div v-if="verificationLinkSent" class="mb-4 text-sm font-medium text-emerald-400">
-          ✅ Un nouveau lien de vérification vient d’être envoyé.
-        </div>
+        <div class="bg-white/5 backdrop-blur-md rounded-2xl ring-1 ring-white/10 p-6 shadow-2xl">
+          <div class="mb-4 text-sm leading-relaxed">
+            Merci pour votre inscription ! Avant de commencer, vérifiez votre adresse e-mail en cliquant sur le lien que nous venons de vous envoyer.
+            Si vous ne l’avez pas reçu, nous pouvons vous en renvoyer un.
+          </div>
 
-        <form @submit.prevent="submit" class="mt-4 flex items-center justify-between gap-4">
-          <PrimaryButton :disabled="form.processing">Renvoyer l’e-mail</PrimaryButton>
-          <Link
-            :href="route('logout')" method="post" as="button"
-            class="rounded-md text-sm underline text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-0"
-          >
-            Se déconnecter
-          </Link>
-        </form>
+          <div v-if="verificationLinkSent" class="mb-4 text-sm font-medium text-emerald-400">
+            ✅ Un nouveau lien de vérification vient d’être envoyé.
+          </div>
+
+          <form @submit.prevent="submit" class="mt-4 flex items-center justify-between gap-4">
+            <PrimaryButton :disabled="form.processing">Renvoyer l’e-mail</PrimaryButton>
+            <Link
+              :href="route('logout')" method="post" as="button"
+              class="rounded-md text-sm underline text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-0"
+            >
+              Se déconnecter
+            </Link>
+          </form>
+        </div>
       </div>
     </div>
+    <SiteFooter :is-light="isLight" :reveal="true" :home-links="true" />
   </div>
 </template>
