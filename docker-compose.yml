@@ -1,8 +1,9 @@
-# Stack locale IDENTIQUE sur toutes les machines.
+# Stack locale IDENTIQUE — MySQL 8.4 (aligné dump / laradock source 8.4.6)
 # Ports = .env (MySQL 3307, Redis 6379). App : composer dev:all → :8002
 services:
   mysql:
-    image: mysql:8.0
+    # 8.4.x — même branche majeure que le serveur source du dump (8.4.6)
+    image: mysql:8.4
     container_name: ispace-mysql
     restart: unless-stopped
     ports:
@@ -13,16 +14,18 @@ services:
       MYSQL_USER: "${DB_USERNAME:-ispace_coin}"
       MYSQL_PASSWORD: "${DB_PASSWORD:-ispace_coin}"
     command:
-      - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+      # 8.4 : native password optionnel (clients anciens)
+      - --mysql-native-password=ON
     volumes:
       - ispace_mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 30
+      start_period: 20s
 
   redis:
     image: redis:7-alpine
@@ -30,8 +33,6 @@ services:
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
-    # Si REDIS_PASSWORD est vide dans .env, Redis démarre sans mdp.
-    # Sinon : même secret que sur toutes les machines.
     command:
       - redis-server
       - --requirepass
