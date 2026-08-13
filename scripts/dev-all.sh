@@ -47,12 +47,17 @@ echo ""
 free_port() {
   local port="$1"
   local pids=""
+  # set -e + pipefail : les pipelines "vide" ne doivent pas tuer le script
   if command -v fuser >/dev/null 2>&1; then
     pids="$(fuser "${port}/tcp" 2>/dev/null || true)"
   fi
-  if [ -z "$pids" ] && command -v ss >/dev/null 2>&1; then
-    pids="$(ss -tlnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | sort -u | tr '\n' ' ')"
+  if [ -z "${pids// /}" ] && command -v ss >/dev/null 2>&1; then
+    pids="$(
+      ss -tlnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | sort -u | tr '\n' ' ' || true
+    )"
   fi
+  # trim
+  pids="$(echo "$pids" | xargs 2>/dev/null || true)"
   if [ -n "$pids" ]; then
     echo "▶ Port ${port} occupé → stop process: ${pids}"
     # shellcheck disable=SC2086
