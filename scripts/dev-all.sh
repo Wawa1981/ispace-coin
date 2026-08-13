@@ -1,79 +1,119 @@
 #!/usr/bin/env bash
-# Démarre MySQL (Laradock) + stack Laravel/Vite (front + back)
+# Démarre EXACTEMENT la même stack sur n'importe quelle machine :
+#   MySQL (:DB_PORT) + Redis (:6379) + Laravel serve + queue + logs + Vite
+# Usage : composer dev:all
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-# Chemin Laradock (override: export LARADOCK_PATH=/chemin/vers/laradock)
-LARADOCK_PATH="${LARADOCK_PATH:-$HOME/laradock}"
-DB_PORT="${DB_PORT:-$(grep -E '^DB_PORT=' .env 2>/dev/null | cut -d= -f2- | tr -d '"' || echo 3307)}"
+env_val() {
+  local key="$1" default="${2:-}"
+  local line
+  line="$(grep -E "^${key}=" .env 2>/dev/null | tail -n1 || true)"
+  if [ -z "$line" ]; then
+    printf '%s' "$default"
+    return
+  fi
+  printf '%s' "${line#*=}" | tr -d '"' | tr -d "'"
+}
+
+DB_PORT="$(env_val DB_PORT 3307)"
+REDIS_PORT="$(env_val REDIS_PORT 6379)"
 APP_PORT="${APP_PORT:-8002}"
 
-echo "▶ iSpaceCoin — démarrage complet"
+port_open() {
+  local port="$1"
+  if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "$port" 2>/dev/null; then
+    return 0
+  fi
+  if php -r "\$e=@fsockopen('127.0.0.1',(int)'$port',\$n,\$s,1); exit(\$e?0:1);" 2>/dev/null; then
+    return 0
+  fi
+  if timeout 1 bash -c "echo >/dev/tcp/127.0.0.1/$port" 2>/dev/null; then
+    return 0
+  fi
+  return 1
+}
+
+echo "▶ iSpaceCoin — démarrage identique"
 echo "  projet : $ROOT"
 echo "  mysql  : 127.0.0.1:${DB_PORT}"
+echo "  redis  : 127.0.0.1:${REDIS_PORT}"
 echo "  app    : http://127.0.0.1:${APP_PORT}"
 echo ""
 
-# --- MySQL Docker ---
 if ! command -v docker >/dev/null 2>&1; then
-  echo "✗ Docker introuvable. Installe Docker ou démarre MySQL manuellement."
+  echo "✗ Docker introuvable."
   exit 1
 fi
 
-if [ -f "$LARADOCK_PATH/docker-compose.yml" ] || [ -f "$LARADOCK_PATH/compose.yaml" ]; then
-  echo "▶ Laradock MySQL ($LARADOCK_PATH)…"
-  (
-    cd "$LARADOCK_PATH"
-    if docker compose version >/dev/null 2>&1; then
-      docker compose up -d mysql
-    else
-      docker-compose up -d mysql
-    fi
-  )
-elif docker ps -a --format '{{.Names}}' | grep -qx 'laradock-mysql-1'; then
-  echo "▶ Conteneur laradock-mysql-1…"
-  docker start laradock-mysql-1 >/dev/null
-else
-  echo "⚠ Laradock non trouvé ($LARADOCK_PATH) et pas de conteneur laradock-mysql-1."
-  echo "  Démarre MySQL à la main, puis relance."
+# --- MySQL + Redis : docker compose du projet (même partout) ---
+# Si le port est déjà pris (Laradock, etc.), on réutilise le service existant.
+need_compose=0
+if ! port_open "$DB_PORT"; then
+  need_compose=1
+fi
+if ! port_open "$REDIS_PORT"; then
+  need_compose=1
 fi
 
-# Attendre que le port MySQL réponde
-echo "▶ Attente MySQL sur le port ${DB_PORT}…"
-ready=0
-for i in $(seq 1 45); do
-  if command -v nc >/dev/null 2>&1 && nc -z 127.0.0.1 "$DB_PORT" 2>/dev/null; then
-    ready=1
-  elif php -r "\$e=@fsockopen('127.0.0.1',(int)'$DB_PORT',\$n,\$s,1); exit(\$e?0:1);" 2>/dev/null; then
-    ready=1
-  elif timeout 1 bash -c "echo >/dev/tcp/127.0.0.1/$DB_PORT" 2>/dev/null; then
-    ready=1
+if [ "$need_compose" -eq 1 ]; then
+  if [ ! -f docker-compose.yml ]; then
+    echo "✗ docker-compose.yml manquant dans le projet"
+    exit 1
   fi
-  if [ "$ready" -eq 1 ]; then
+  echo "▶ Docker Compose (mysql + redis)…"
+  if docker compose version >/dev/null 2>&1; then
+    docker compose --env-file .env up -d mysql redis
+  else
+    docker-compose --env-file .env up -d mysql redis
+  fi
+else
+  echo "✓ MySQL déjà sur :${DB_PORT}"
+  echo "✓ Redis déjà sur :${REDIS_PORT}"
+fi
+
+# Conteneurs nommés ispace-* s'ils existent (reprise après reboot)
+docker start ispace-mysql 2>/dev/null || true
+docker start ispace-redis 2>/dev/null || true
+
+echo "▶ Attente MySQL :${DB_PORT}…"
+for i in $(seq 1 45); do
+  if port_open "$DB_PORT"; then
     echo "✓ MySQL joignable"
     break
   fi
   if [ "$i" -eq 45 ]; then
-    echo "✗ Timeout : MySQL ne répond pas sur 127.0.0.1:${DB_PORT}"
-    echo "  Vérifie: docker ps | grep mysql"
+    echo "✗ Timeout MySQL 127.0.0.1:${DB_PORT}"
     exit 1
   fi
   sleep 1
 done
 
-# Petit délai pour que mysqld accepte les connexions après le port ouvert
-sleep 2
+echo "▶ Attente Redis :${REDIS_PORT}…"
+for i in $(seq 1 30); do
+  if port_open "$REDIS_PORT"; then
+    echo "✓ Redis joignable"
+    break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "✗ Timeout Redis 127.0.0.1:${REDIS_PORT}"
+    exit 1
+  fi
+  sleep 1
+done
+
+sleep 1
 
 echo ""
-echo "▶ Laravel + Vite (front + back ensemble)…"
+echo "▶ Laravel + Vite (même commande partout)…"
 echo "  URL : http://127.0.0.1:${APP_PORT}"
 echo ""
 
 export COMPOSER_PROCESS_TIMEOUT=0
 
-# serve sur le même port que APP_URL (.env → 8002)
+# php doit être 8.2+ avec redis/mbstring/dom (voir scripts/ensure-php.sh)
 npx concurrently \
   -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
   "php artisan serve --host=127.0.0.1 --port=${APP_PORT}" \

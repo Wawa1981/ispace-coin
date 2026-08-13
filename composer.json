@@ -68,6 +68,7 @@
         ],
         "dev:all": [
             "Composer\\Config::disableProcessTimeout",
+            "bash scripts/ensure-php.sh",
             "bash scripts/dev-all.sh"
         ],
         "dev:ssr": [
