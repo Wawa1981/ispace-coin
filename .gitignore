@@ -51,3 +51,4 @@ app/Models/getBalanceFloat
 
 # DB dumps
 /storage/backups/
+ispace_coin_full.sql
