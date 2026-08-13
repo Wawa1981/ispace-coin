@@ -43,6 +43,29 @@ echo "  redis  : 127.0.0.1:${REDIS_PORT}"
 echo "  app    : http://127.0.0.1:${APP_PORT}"
 echo ""
 
+# Libère un port s'il est déjà pris par un vieux php/vite (sinon serve/vite crash)
+free_port() {
+  local port="$1"
+  local pids=""
+  if command -v fuser >/dev/null 2>&1; then
+    pids="$(fuser "${port}/tcp" 2>/dev/null || true)"
+  fi
+  if [ -z "$pids" ] && command -v ss >/dev/null 2>&1; then
+    pids="$(ss -tlnp 2>/dev/null | grep ":${port} " | sed -n 's/.*pid=\([0-9]*\).*/\1/p' | sort -u | tr '\n' ' ')"
+  fi
+  if [ -n "$pids" ]; then
+    echo "▶ Port ${port} occupé → stop process: ${pids}"
+    # shellcheck disable=SC2086
+    kill $pids 2>/dev/null || true
+    sleep 0.5
+    # shellcheck disable=SC2086
+    kill -9 $pids 2>/dev/null || true
+  fi
+}
+
+free_port "$APP_PORT"
+free_port 5173
+
 if ! command -v docker >/dev/null 2>&1; then
   echo "✗ Docker introuvable."
   exit 1
@@ -58,25 +81,31 @@ if ! port_open "$REDIS_PORT"; then
   need_compose=1
 fi
 
+# Toujours (re)démarrer les conteneurs projet s'ils existent ; sinon compose.
+docker start ispace-mysql 2>/dev/null || true
+docker start ispace-redis 2>/dev/null || true
+
 if [ "$need_compose" -eq 1 ]; then
   if [ ! -f docker-compose.yml ]; then
     echo "✗ docker-compose.yml manquant dans le projet"
     exit 1
   fi
   echo "▶ Docker Compose (mysql + redis)…"
-  if docker compose version >/dev/null 2>&1; then
-    docker compose --env-file .env up -d mysql redis
+  # Si un conteneur orphelin porte déjà le nom, on le réutilise (start), pas recreate
+  if docker ps -a --format '{{.Names}}' | grep -qx ispace-mysql \
+    && docker ps -a --format '{{.Names}}' | grep -qx ispace-redis; then
+    docker start ispace-mysql ispace-redis >/dev/null
   else
-    docker-compose --env-file .env up -d mysql redis
+    if docker compose version >/dev/null 2>&1; then
+      docker compose --env-file .env up -d mysql redis
+    else
+      docker-compose --env-file .env up -d mysql redis
+    fi
   fi
 else
   echo "✓ MySQL déjà sur :${DB_PORT}"
   echo "✓ Redis déjà sur :${REDIS_PORT}"
 fi
-
-# Conteneurs nommés ispace-* s'ils existent (reprise après reboot)
-docker start ispace-mysql 2>/dev/null || true
-docker start ispace-redis 2>/dev/null || true
 
 echo "▶ Attente MySQL :${DB_PORT}…"
 for i in $(seq 1 45); do
