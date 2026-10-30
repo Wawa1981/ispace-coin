@@ -9,11 +9,13 @@ export default defineConfigWithVueTs(
     {
         ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'resources/js/components/ui/*'],
     },
+    prettier,
     {
         rules: {
             'vue/multi-word-component-names': 'off',
             '@typescript-eslint/no-explicit-any': 'off',
+            'vue/block-lang': 'warn',
+            '@typescript-eslint/no-unused-vars': 'warn',
         },
     },
-    prettier,
 );
