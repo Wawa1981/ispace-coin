@@ -7,14 +7,15 @@
       :items="items"
       :isSidebarOpen="isSidebarOpen"
       :isLight="isLight"
-      @toggle="isSidebarOpen = !isSidebarOpen"
+      @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <template #icon="{ icon, isLight }">
         <SidebarIcon :icon="icon" :isLight="isLight" />
       </template>
     </Sidebar>
 
-    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-8">
+    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8">
       <ThemeSwitcher />
 
       <div class="flex flex-col items-center justify-start w-full min-h-[calc(100vh-10rem)] pt-20">
@@ -119,10 +120,11 @@ import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import WalletBalances from '@/Components/WalletBalances.vue'
 
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
 const { isLight, bgClass, textClass, titleClass } = useTheme()
 
-const isSidebarOpen = ref(true)
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const items = [
   { route: 'dashboard', label: 'Tableau de bord', icon: 'home' },

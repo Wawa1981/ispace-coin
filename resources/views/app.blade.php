@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title inertia>{{ config('app.name', 'iSpaceCoin') }}</title>
+        <title inertia>{{ config('app.name', 'CryptoActus') }}</title>
 
          <!-- CSRF Token -->
         <meta name="csrf-token" content="{{ csrf_token() }}">

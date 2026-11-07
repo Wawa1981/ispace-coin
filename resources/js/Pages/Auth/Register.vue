@@ -29,13 +29,13 @@
             <p class="auth__kicker">Info · Finance · Capital</p>
             <h2 class="auth__headline">
               Rejoignez
-              <span class="auth__headline-grad">iSpaceCoin</span>
+              <span class="auth__headline-grad">CryptoActus</span>
             </h2>
             <p class="auth__sub">
               Créez votre compte pour accéder aux marchés, actualités et portefeuille.
             </p>
             <p class="auth__services">
-              <strong class="auth__brand-name">iSpaceCoin</strong>
+              <strong class="auth__brand-name">CryptoActus</strong>
               regroupe les flux d’actualités multi-sources, vous informe sur les cours des devises, fiat,
               stablecoins, crypto et actions, propose des outils d’échange et vous offre un service de suivi de
               portefeuille pour décider et gérer votre capital.
@@ -70,7 +70,7 @@
             </div>
             <h1 class="auth__title">Créer un compte</h1>
             <p class="auth__lead">
-              Inscrivez-vous pour accéder à votre espace iSpaceCoin.
+              Inscrivez-vous pour accéder à votre espace CryptoActus.
             </p>
           </header>
 
@@ -366,19 +366,76 @@ function submit() {
 }
 
 @media (max-width: 959px) {
+  .auth {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  .auth__shell {
+    min-height: 100dvh;
+  }
+  .auth__brand {
+    min-height: 0;
+  }
+  .auth__brand-inner {
+    padding: 0.6rem 0.85rem 0.5rem;
+    gap: 0.35rem;
+    min-height: 0;
+    justify-content: flex-start;
+  }
   .auth__brand-copy {
-    margin: 1rem 0 !important;
+    margin: 0 !important;
   }
   .auth__headline {
-    font-size: 1.55rem !important;
+    font-size: 1.05rem !important;
+    margin: 0.15rem 0 !important;
+  }
+  .auth__sub,
+  .auth__services {
+    font-size: 0.68rem;
+    line-height: 1.3;
+    margin: 0.15rem 0 0;
   }
   .auth__perks {
     flex-direction: row !important;
     flex-wrap: wrap;
-    gap: 0.5rem 0.85rem !important;
+    gap: 0.25rem 0.55rem !important;
   }
   .auth__perks li {
-    font-size: 0.78rem !important;
+    font-size: 0.65rem !important;
+  }
+  .auth__panel {
+    padding: 0.55rem 0.75rem 0.75rem;
+    align-items: flex-start;
+  }
+  .auth__panel-inner {
+    max-width: 100%;
+    padding: 0.8rem 0.75rem;
+  }
+  .auth__head {
+    margin-bottom: 0.5rem;
+  }
+  .auth__title {
+    font-size: 1.15rem;
+  }
+  .auth__lead {
+    font-size: 0.75rem;
+  }
+  .auth__google {
+    height: 2.3rem;
+    font-size: 0.8rem;
+  }
+  .auth__divider {
+    margin: 0.5rem 0;
+  }
+  .auth__form {
+    gap: 0.4rem;
+  }
+  .auth__input {
+    height: 2.35rem;
+    font-size: 16px;
+  }
+  .auth__submit {
+    height: 2.3rem;
   }
 }
 
@@ -553,6 +610,8 @@ function submit() {
 .auth__panel-inner {
   width: 100%;
   max-width: 380px;
+  position: relative;
+  z-index: 50;
   padding: 1.6rem 1.4rem;
   border-radius: 1.15rem;
   /* transparent pour les étoiles */

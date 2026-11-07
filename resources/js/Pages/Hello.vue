@@ -8,29 +8,39 @@
       <Ticker />
 
       <!-- Popup actu vidéo (style BFM / médias) -->
-      <VideoNewsPopup :is-light="isLight" />
+      <VideoNewsPopup ref="tvPopup" :is-light="isLight" hide-reopen />
 
-      <!-- Barre du haut -->
-      <div class="absolute top-8 left-4 z-40 flex gap-3">
-        <Link :href="route('login')" 
-          :class="['btn-futuristic from-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-600', btnBorderClass]">
-          Login
-        </Link>
-        <Link :href="route('register')" 
-          :class="['btn-futuristic from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600', btnBorderClass]">
-          Register
-        </Link>
+      <!-- Barre du haut : Login · Register · TV Finance · terre / lune -->
+      <div class="home-auth-bar absolute left-4 right-4 z-50 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-3 min-w-0">
+          <Link :href="route('login')" 
+            :class="['btn-futuristic from-blue-600 to-indigo-700 hover:from-indigo-700 hover:to-blue-600', btnBorderClass]">
+            Login
+          </Link>
+          <Link :href="route('register')" 
+            :class="['btn-futuristic from-purple-600 to-pink-600 hover:from-pink-600 hover:to-purple-600', btnBorderClass]">
+            Register
+          </Link>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            class="vnp-reopen"
+            :class="isLight ? 'vnp-reopen--light' : 'vnp-reopen--dark'"
+            @click="openTv"
+          >
+            ▶ TV Finance
+          </button>
+          <ThemeSwitcher inline />
+        </div>
       </div>
-
-      <!-- Switcher à droite -->
-      <ThemeSwitcher />
 
       <!-- Brand wordmark : même taille + épaisseur 3D (extrusion Z) -->
       <section class="brand-stage min-h-[22vh] md:min-h-[20vh] flex flex-col items-center justify-center text-center px-4 py-6">
         <h1
           class="brand-wordmark brand-wordmark--spin"
           :class="isLight ? 'brand-wordmark--light' : 'brand-wordmark--dark'"
-          aria-label="iSpaceCoin"
+          aria-label="CryptoActus"
         >
           <!-- Tranches d’épaisseur (1px chacune) — pas plus grand, pas étiré -->
           <span
@@ -41,15 +51,15 @@
             :style="{ '--z': z }"
             :aria-hidden="z !== 0"
           >
-            <span class="brand-wordmark__i">i</span><span class="brand-wordmark__space">Space</span><span class="brand-wordmark__coin">Coin</span>
+            <span class="brand-wordmark__space">Crypto</span><span class="brand-wordmark__coin">Actus</span>
           </span>
         </h1>
         <p class="brand-tagline" :class="isLight ? 'brand-tagline--light' : 'brand-tagline--dark'">
           <span class="brand-tagline__info">Info</span>
           <span class="brand-tagline__dot">·</span>
-          <span class="brand-tagline__space">Space</span>
+          <span class="brand-tagline__space">Crypto</span>
           <span class="brand-tagline__dot">·</span>
-          <span class="brand-tagline__coin">Coin</span>
+          <span class="brand-tagline__coin">Actus</span>
         </p>
         <p class="hero-pitch" :class="bodyTextClass">
           Toutes les infos finance &amp; crypto des meilleurs sites d’actualité —
@@ -182,6 +192,11 @@ import { useCryptoMarkets } from '@/composables/useCryptoMarkets'
 
 const { isLight, bgClass, textClass, titleClass, bodyTextClass, btnBorderClass, socialBtnClass } = useTheme()
 const { markets } = useCryptoMarkets()
+
+const tvPopup = ref(null)
+function openTv() {
+  tvPopup.value?.open?.()
+}
 
 const showMarkets = ref(false)
 const thicknessLayers = Array.from({ length: 16 }, (_, i) => i)
@@ -370,8 +385,53 @@ const thicknessLayers = Array.from({ length: 16 }, (_, i) => i)
   to { opacity: 1; transform: translateY(0); }
 }
 
+.home-auth-bar {
+  top: calc(var(--ticker-h) + 8px);
+}
+
 .btn-futuristic {
   @apply font-bold py-3 px-8 rounded-lg bg-gradient-to-r shadow-xl transition-all duration-300 transform hover:scale-110 border bg-opacity-90;
+}
+
+.vnp-reopen {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  border: 0;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+.vnp-reopen--dark {
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(220, 38, 38, 0.5);
+}
+.vnp-reopen--light {
+  background: #fff;
+  color: #0f172a;
+}
+
+@media (max-width: 767px) {
+  .home-auth-bar {
+    top: calc(var(--ticker-h) + 6px);
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+  .btn-futuristic {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: none;
+    transform: none;
+  }
+  .vnp-reopen {
+    font-size: 0.65rem;
+    padding: 0.35rem 0.6rem;
+  }
 }
 
 .social-btn {

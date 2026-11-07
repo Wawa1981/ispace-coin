@@ -19,7 +19,7 @@
 
     <!-- Footer -->
     <footer class="py-6 text-center" :class="bodyTextClass">
-      © {{ new Date().getFullYear() }} iSpaceCoin — Tous droits réservés
+      © {{ new Date().getFullYear() }} CryptoActus — Tous droits réservés
     </footer>
   </div>
 </template>

@@ -1,29 +1,53 @@
 <template>
+  <div class="sb-root">
+  <button
+    v-show="isMobile && !isSidebarOpen"
+    type="button"
+    class="sb__burger"
+    aria-label="Ouvrir le menu"
+    :style="burgerStyle"
+    @click="emit('toggle')"
+  >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  </button>
+
+  <div
+    v-show="isMobile && isSidebarOpen"
+    class="sb__backdrop"
+    aria-hidden="true"
+    @click="emit('close')"
+  />
+
   <aside
     class="sb"
     :class="[
-      isSidebarOpen ? 'sb--open' : 'sb--closed',
+      isMobile ? 'sb--drawer' : (isSidebarOpen ? 'sb--open' : 'sb--closed'),
+      isMobile && isSidebarOpen ? 'sb--drawer-open' : '',
+      isMobile && !isSidebarOpen ? 'sb--drawer-hidden' : '',
       isLight ? 'sb--light' : 'sb--dark',
     ]"
     :aria-expanded="isSidebarOpen"
+    :aria-hidden="isMobile && !isSidebarOpen"
     :style="tickerPadStyle"
   >
     <div class="sb__glow" aria-hidden="true" />
 
     <!-- Header : logo + collapse -->
     <header class="sb__head">
-      <Link href="/" class="sb__brand" :title="isSidebarOpen ? undefined : 'iSpaceCoin'">
-        <BrandLogo media-class="sb__logo" alt="iSpaceCoin" />
+      <Link href="/" class="sb__brand" :title="isSidebarOpen ? undefined : 'CryptoActus'">
+        <BrandLogo media-class="sb__logo" alt="CryptoActus" />
         <span v-show="isSidebarOpen" class="sb__word">
-          <em>i</em>Space<span>Coin</span>
+          <em>Crypto</em><span>Actus</span>
         </span>
       </Link>
 
       <button
         type="button"
         class="sb__toggle"
-        :aria-label="isSidebarOpen ? 'Réduire le menu' : 'Ouvrir le menu'"
-        @click="$emit('toggle')"
+        :aria-label="isMobile ? 'Fermer le menu' : (isSidebarOpen ? 'Réduire le menu' : 'Ouvrir le menu')"
+        @click="isMobile ? emit('close') : emit('toggle')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path v-if="isSidebarOpen" d="M15 6l-6 6 6 6" />
@@ -45,6 +69,7 @@
         :title="isSidebarOpen ? undefined : item.label"
         :aria-label="item.label"
         :aria-current="isActive(item) ? 'page' : undefined"
+        @click="onNavigate"
       >
         <span class="sb__ico" aria-hidden="true">
           <slot name="icon" :icon="item.icon" :isLight="isLight">
@@ -63,6 +88,7 @@
         class="sb__profile"
         :class="{ 'is-active': isProfileActive }"
         :title="isSidebarOpen ? undefined : 'Profil'"
+        @click="onNavigate"
       >
         <span class="sb__profile-avatar" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -77,13 +103,15 @@
       </Link>
     </div>
   </aside>
+  </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { Link } from '@inertiajs/vue3'
 import BrandLogo from '@/Components/BrandLogo.vue'
 import SidebarIcon from '@/Components/SidebarIcon.vue'
+import { SIDEBAR_MD, isMobileViewport } from '@/composables/useSidebar'
 
 const props = defineProps({
   isSidebarOpen: { type: Boolean, default: true },
@@ -93,7 +121,62 @@ const props = defineProps({
   tickerHeightPx: { type: [String, Number], default: '0px' },
 })
 
-defineEmits(['toggle'])
+const emit = defineEmits(['toggle', 'close'])
+
+const isMobile = ref(isMobileViewport())
+
+function tickerCss() {
+  const raw = props.tickerHeightPx
+  if (raw === undefined || raw === null || raw === '' || raw === '0' || raw === '0px') {
+    return '48px'
+  }
+  return typeof raw === 'number' ? `${raw}px` : String(raw)
+}
+
+const burgerStyle = computed(() => ({
+  top: `calc(${tickerCss()} + 0.5rem)`,
+}))
+
+function onNavigate() {
+  if (isMobile.value && props.isSidebarOpen) {
+    emit('close')
+  }
+}
+
+function onKeydown(e) {
+  if (e.key === 'Escape' && isMobile.value && props.isSidebarOpen) {
+    emit('close')
+  }
+}
+
+function lockScroll(lock) {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = lock ? 'hidden' : ''
+}
+
+function onMqChange(e) {
+  isMobile.value = e.matches
+}
+
+let mq = null
+
+onMounted(() => {
+  isMobile.value = isMobileViewport()
+  mq = window.matchMedia(`(max-width: ${SIDEBAR_MD - 1}px)`)
+  mq.addEventListener('change', onMqChange)
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  mq?.removeEventListener('change', onMqChange)
+  window.removeEventListener('keydown', onKeydown)
+  lockScroll(false)
+})
+
+watch(
+  () => isMobile.value && props.isSidebarOpen,
+  (open) => lockScroll(!!open),
+)
 
 const tickerPadStyle = computed(() => {
   const raw = props.tickerHeightPx
@@ -151,6 +234,10 @@ const isProfileActive = computed(() => {
 </script>
 
 <style scoped>
+.sb-root {
+  display: contents;
+}
+
 .sb {
   --sb-w-open: 15.5rem;
   --sb-w-closed: 4.75rem;
@@ -555,11 +642,69 @@ const isProfileActive = computed(() => {
   margin-top: 0.12rem;
 }
 
-/* Mobile : rail compact par défaut si viewport étroit */
-@media (max-width: 768px) {
-  .sb {
-    position: sticky;
+.sb__burger {
+  position: fixed;
+  left: max(0.75rem, env(safe-area-inset-left));
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(165, 180, 252, 0.28);
+  background: rgba(15, 12, 40, 0.72);
+  color: #f8fafc;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.55);
+  cursor: pointer;
+}
+.sb__burger svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.sb--light ~ .sb__burger,
+.sb-root:has(.sb--light) .sb__burger {
+  background: rgba(255, 255, 255, 0.88);
+  color: #0f172a;
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.sb__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(2, 6, 23, 0.55);
+}
+
+@media (max-width: 767px) {
+  .sb--drawer {
+    position: fixed;
+    left: 0;
     top: 0;
+    z-index: 60;
+    width: min(18rem, 86vw);
+    transform: translateX(-105%);
+    pointer-events: none;
+    transition:
+      transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.3s ease,
+      border-color 0.3s ease;
+    box-shadow: none;
+  }
+  .sb--drawer-open {
+    transform: translateX(0);
+    pointer-events: auto;
+    box-shadow: 16px 0 40px -12px rgba(0, 0, 0, 0.55);
+  }
+  .sb--drawer-hidden {
+    transform: translateX(-105%);
+    pointer-events: none;
+  }
+  .sb--drawer .sb__toggle {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 }
 </style>

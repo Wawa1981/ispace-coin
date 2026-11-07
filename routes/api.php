@@ -2,8 +2,6 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\BalanceController;
-use App\Http\Controllers\OnchainController;
 use App\Http\Controllers\CoinGeckoController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\TvController;
@@ -24,14 +22,7 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Routes protégées par Sanctum
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/balances', [BalanceController::class, 'index']);
-    Route::post('/balances/deposit', [BalanceController::class, 'deposit']);
-    Route::get('/wallets/{asset}/deposit-address', [OnchainController::class, 'depositAddress']);
-    Route::post('/wallets/{asset}/withdraw', [OnchainController::class, 'withdraw']);
-    Route::get('/wallets/{asset}/transactions', [OnchainController::class, 'transactions']);
-});
+
 
 // Route publique (bandeau ticker)
 Route::get('/crypto-prices', [CoinGeckoController::class, 'ticker']);

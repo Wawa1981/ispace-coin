@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Démarre EXACTEMENT la même stack sur n'importe quelle machine :
-#   MySQL (:DB_PORT) + Redis (:6379) + Laravel serve + queue + logs + Vite
+# MySQL (:DB_PORT) + Redis (:6379) + Laravel (:8002, joignable depuis le téléphone) + logs + Vite
 # Usage : composer dev:all
+# La file d'attente et BitGo ne font pas partie de ce démarrage.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -36,11 +36,16 @@ port_open() {
   return 1
 }
 
-echo "▶ iSpaceCoin — démarrage identique"
-echo "  projet : $ROOT"
-echo "  mysql  : 127.0.0.1:${DB_PORT}"
-echo "  redis  : 127.0.0.1:${REDIS_PORT}"
-echo "  app    : http://127.0.0.1:${APP_PORT}"
+LAN_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+
+echo "▶ iSpaceCoin — démarrage"
+echo "  projet     : $ROOT"
+echo "  mysql      : 127.0.0.1:${DB_PORT}"
+echo "  redis      : 127.0.0.1:${REDIS_PORT}"
+echo "  navigateur : http://127.0.0.1:${APP_PORT}"
+if [ -n "$LAN_IP" ]; then
+  echo "  téléphone  : http://${LAN_IP}:${APP_PORT}"
+fi
 echo ""
 
 # Libère un port s'il est déjà pris par un vieux php/vite (sinon serve/vite crash)
@@ -141,18 +146,21 @@ done
 sleep 1
 
 echo ""
-echo "▶ Laravel + Vite (même commande partout)…"
-echo "  URL : http://127.0.0.1:${APP_PORT}"
+echo "▶ Laravel + Vite…"
+echo "  navigateur : http://127.0.0.1:${APP_PORT}"
+if [ -n "${LAN_IP:-}" ]; then
+  echo "  téléphone  : http://${LAN_IP}:${APP_PORT}"
+fi
 echo ""
 
 export COMPOSER_PROCESS_TIMEOUT=0
 
 # php doit être 8.2+ avec redis/mbstring/dom (voir scripts/ensure-php.sh)
+# 0.0.0.0 : le téléphone joint l'IP LAN. 127.0.0.1 seul le refuse.
 npx concurrently \
-  -c "#93c5fd,#c4b5fd,#fb7185,#fdba74" \
-  "php artisan serve --host=127.0.0.1 --port=${APP_PORT}" \
-  "php artisan queue:listen --tries=1" \
+  -c "#93c5fd,#fb7185,#fdba74" \
+  "php artisan serve --host=0.0.0.0 --port=${APP_PORT}" \
   "php artisan pail --timeout=0" \
   "npm run dev" \
-  --names=server,queue,logs,vite \
+  --names=server,logs,vite \
   --kill-others

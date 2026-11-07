@@ -8,14 +8,15 @@
       :isSidebarOpen="isSidebarOpen"
       :isLight="isLight"
       :tickerHeightPx="`${tickerHeight}px`"
-      @toggle="isSidebarOpen = !isSidebarOpen"
+      @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <template #icon="{ icon, isLight }">
         <SidebarIcon :icon="icon" :isLight="isLight" />
       </template>
     </Sidebar>
 
-    <main class="relative z-10 w-full pb-16 transition-all duration-300" :style="{ paddingTop: contentPadTopPx }">
+    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8" :style="{ paddingTop: contentPadTopPx }">
       <ThemeSwitcher />
       <Ticker />
 
@@ -101,8 +102,10 @@ import Ticker from '@/Components/Ticker.vue'
 import WalletBalances from '@/Components/WalletBalances.vue'
 
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
 const { isLight, bgClass, textClass, titleClass } = useTheme()
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const items = [
   { route: 'dashboard', label: 'Tableau de bord', icon: 'home' },
@@ -115,8 +118,6 @@ const items = [
   { route: 'cartes', label: 'Cartes', icon: 'cards' },
   { route: 'crypto', label: 'Marché', icon: 'pulse' },
 ]
-
-const isSidebarOpen = ref(true)
 
 const selectedAsset = ref('ALL')
 const transactions = ref([])

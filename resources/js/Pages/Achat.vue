@@ -10,6 +10,7 @@
       :items="items"
       :tickerHeightPx="tickerHeightPx"
       @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <template #icon="{ icon, isLight }">
         <svg class="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -27,7 +28,7 @@
       </template>
     </Sidebar>
 
-    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-8" :style="{ paddingTop: contentPadTopPx }">
+    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8" :style="{ paddingTop: contentPadTopPx }">
       
       <Ticker />
 
@@ -72,10 +73,9 @@ import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 // Importation des composables
 import { useTheme } from '@/composables/useTheme'
 import { useCryptoMarkets } from '@/composables/useCryptoMarkets'
+import { useSidebar } from '@/composables/useSidebar'
 
-// Logique de la page
-const isSidebarOpen = ref(true)
-function toggleSidebar() { isSidebarOpen.value = !isSidebarOpen.value }
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 // Utilisation des composables
 const { isLight, bgClass, textClass, titleClass, toggleLight, cycleDarkTheme } = useTheme()

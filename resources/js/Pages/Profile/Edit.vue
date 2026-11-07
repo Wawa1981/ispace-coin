@@ -11,7 +11,8 @@
       :items="items"
       :isSidebarOpen="isSidebarOpen"
       :isLight="isLight"
-      @toggle="isSidebarOpen = !isSidebarOpen"
+      @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <template #icon="{ icon, isLight: light }">
         <SidebarIcon :icon="icon" :isLight="light" />
@@ -26,7 +27,7 @@
           Mon profil
         </h1>
         <p class="mb-8 text-center opacity-70 text-sm md:text-base">
-          Gérez vos informations iSpaceCoin
+          Gérez vos informations CryptoActus
         </p>
 
         <!-- Carte identité -->
@@ -308,7 +309,7 @@
       >
         <h3 class="text-lg font-bold mb-2">Confirmer la suppression</h3>
         <p class="text-sm opacity-80 mb-4">
-          Entrez votre mot de passe pour supprimer définitivement votre compte iSpaceCoin.
+          Entrez votre mot de passe pour supprimer définitivement votre compte CryptoActus.
         </p>
 
         <label for="delete_password" class="block text-sm font-semibold mb-1">Mot de passe</label>
@@ -360,6 +361,7 @@ import SidebarIcon from '@/Components/SidebarIcon.vue'
 import Starfield from '@/Components/Starfield.vue'
 import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
 defineProps({
   mustVerifyEmail: { type: Boolean, default: false },
@@ -367,8 +369,7 @@ defineProps({
 })
 
 const { isLight, bgClass, textClass, titleClass } = useTheme()
-
-const isSidebarOpen = ref(true)
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 const activeTab = ref('info')
 const confirmingDeletion = ref(false)
 const currentPasswordInput = ref(null)
@@ -377,13 +378,6 @@ const deletePasswordInput = ref(null)
 
 const items = [
   { route: 'dashboard', label: 'Tableau de bord', icon: 'home' },
-  { route: 'achat', label: 'Achat', icon: 'hex' },
-  { route: 'retrait', label: 'Retrait', icon: 'orbit' },
-  { route: 'deposit', label: 'Dépôt', icon: 'spark' },
-  { route: 'envoyer', label: 'Envoyer', icon: 'stack' },
-  { route: 'echange', label: 'Échange', icon: 'flow' },
-  { route: 'compte', label: 'Compte', icon: 'id' },
-  { route: 'cartes', label: 'Cartes', icon: 'cards' },
   { route: 'crypto', label: 'Marché', icon: 'pulse' },
 ]
 

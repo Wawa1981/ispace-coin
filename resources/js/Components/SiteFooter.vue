@@ -15,7 +15,7 @@
         <div class="site-footer__brand-col">
           <div class="footer-brand-row">
             <BrandLogo media-class="footer-logo-media" />
-            <p class="footer-brand">iSpaceCoin</p>
+            <p class="footer-brand">CryptoActus</p>
           </div>
           <p class="footer-tag">Info · Space · Coin</p>
           <p class="footer-about">
@@ -69,7 +69,7 @@
         </div>
 
         <!-- Médias -->
-        <div>
+        <div class="site-footer__wide">
           <p class="footer-col-title">Médias &amp; data</p>
           <ul class="footer-links footer-links--2col">
             <li>
@@ -94,7 +94,7 @@
         </div>
 
         <!-- Forums 2 colonnes -->
-        <div>
+        <div class="site-footer__wide">
           <p class="footer-col-title">Forums</p>
           <ul class="footer-links footer-links--2col">
             <li>
@@ -150,7 +150,7 @@
 
       <div class="site-footer__bottom">
         <p class="site-footer__copy">
-          © {{ year }} iSpaceCoin. Info uniquement — ni offre ni conseil financier.
+          © {{ year }} CryptoActus. Info uniquement — ni offre ni conseil financier.
         </p>
         <div class="site-footer__chips">
           <a :href="href('news')" class="footer-chip">Actus</a>
@@ -220,7 +220,7 @@ function refreshFooter(e) {
   const scrollable = doc.scrollHeight - window.innerHeight
   const nearPageEnd = scrollable > 8 && window.scrollY >= scrollable - 64
   const mouseNearBottom =
-    e && typeof e.clientY === 'number' ? e.clientY >= window.innerHeight - 72 : false
+    e && typeof e.clientY === 'number' ? e.clientY >= window.innerHeight - 20 : false
   footerVisible.value = nearPageEnd || mouseNearBottom
 }
 
@@ -260,6 +260,8 @@ onUnmounted(() => {
 
 <style scoped>
 .site-footer {
+  position: relative;
+  z-index: 20;
   margin-top: 0;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
   color: inherit;
@@ -314,8 +316,8 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 16px;
-  pointer-events: auto;
+  height: 12px;
+  pointer-events: none;
 }
 
 .site-footer__inner {
@@ -350,6 +352,19 @@ onUnmounted(() => {
     grid-template-columns: 1fr 1fr;
   }
   .site-footer__tv {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-footer__wide,
+  .site-footer__tv {
+    display: none;
+  }
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .site-footer__brand-col {
     grid-column: 1 / -1;
   }
 }
@@ -491,7 +506,10 @@ onUnmounted(() => {
 }
 
 .footer-links a,
+.footer-links :deep(a),
 .footer-links span {
+  position: relative;
+  z-index: 1;
   font-size: 0.75rem;
   opacity: 0.72;
   text-decoration: none;

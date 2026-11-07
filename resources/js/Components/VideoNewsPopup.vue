@@ -154,7 +154,7 @@
     </Transition>
 
     <button
-      v-if="!visible"
+      v-if="!hideReopen && !visible"
       type="button"
       class="vnp-reopen"
       :class="isLight ? 'vnp-reopen--light' : 'vnp-reopen--dark'"
@@ -170,8 +170,9 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import Hls from 'hls.js'
 import { financeChannels } from '@/data/financeChannels'
 
-defineProps({
+const props = defineProps({
   isLight: { type: Boolean, default: false },
+  hideReopen: { type: Boolean, default: false },
 })
 
 const MIN_W = 280
@@ -678,6 +679,8 @@ function close() {
   destroyHls()
   // garder pendingHlsUrl pour ré-attacher à la réouverture
 }
+
+defineExpose({ open, close })
 function next() {
   index.value = (index.value + 1) % clips.length
   // watch(index) gère le mode Live / latest
@@ -700,12 +703,14 @@ onMounted(() => {
   window.addEventListener('pointerup', onPointerUp)
   window.addEventListener('resize', onWinResize)
 
-  // Afficher la popup PUIS lancer le Live (mode par défaut)
-  setTimeout(async () => {
-    visible.value = true
-    await nextTick()
-    applyChannelDefaultMode()
-  }, 600)
+  // Desktop : ouverture auto. Mobile : bouton TV seulement (ne mange pas l’écran).
+  if (window.matchMedia('(min-width: 768px)').matches) {
+    setTimeout(async () => {
+      visible.value = true
+      await nextTick()
+      applyChannelDefaultMode()
+    }, 600)
+  }
 })
 
 onUnmounted(() => {
@@ -1032,6 +1037,17 @@ a.vnp__msg-btn--link {
 .vnp-reopen--light {
   background: #fff;
   color: #0f172a;
+}
+
+@media (max-width: 767px) {
+  .vnp-reopen {
+    top: auto;
+    bottom: 1rem;
+    right: 0.75rem;
+    z-index: 45;
+    font-size: 0.68rem;
+    padding: 0.35rem 0.65rem;
+  }
 }
 
 .vnp-enter-active,

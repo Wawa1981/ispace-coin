@@ -118,7 +118,7 @@ class NewsController extends Controller
         foreach ($feeds as $feedUrl) {
             try {
                 $res = Http::timeout(10)
-                    ->withHeaders(['User-Agent' => 'iSpaceCoin/1.0'])
+                    ->withHeaders(['User-Agent' => 'CryptoActus/1.0'])
                     ->get($feedUrl);
 
                 if (! $res->successful()) {

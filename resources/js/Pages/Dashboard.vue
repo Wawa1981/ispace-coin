@@ -15,6 +15,7 @@
       :items="items"
       :tickerHeightPx="tickerHeightPx"
       @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <!-- Slot des icônes -->
       <template #icon="{ icon, isLight }">
@@ -24,7 +25,7 @@
 
     <!-- Contenu principal -->
     <main
-      class="relative z-10 w-full pb-16 transition-all duration-300 px-8"
+      class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8"
       :style="{ paddingTop: contentPadTopPx }"
     >
       <!-- Bandeau crypto -->
@@ -36,7 +37,7 @@
         <!-- Changer style thème sombre -->
         <button
           @click="cycleDarkTheme"
-          class="w-12 h-12 rounded-full bg-gray backdrop-blur-md shadow-lg text-xl text-black flex items-center justify-center hover:scale-110 transition"
+          class="theme-orb w-12 h-12 rounded-full bg-gray backdrop-blur-md shadow-lg text-xl text-black flex items-center justify-center hover:scale-110 transition"
           title="Changer le style du thème sombre"
         >
           🌍
@@ -45,7 +46,7 @@
         <!-- Jour / nuit -->
         <button
           @click="toggleLight"
-          class="w-12 h-12 rounded-full bg-gray backdrop-blur-md shadow-lg text-xl text-black flex items-center justify-center hover:scale-110 transition"
+          class="theme-orb w-12 h-12 rounded-full bg-gray backdrop-blur-md shadow-lg text-xl text-black flex items-center justify-center hover:scale-110 transition"
         >
           {{ isLight ? '🌖' : '🌕' }}
         </button>
@@ -63,11 +64,19 @@
             titleClass
           ]"
         >
-          Tableau de bord iSpaceCoin
+          CryptoActus
         </h1>
 
-        <!-- Composant des soldes -->
-        <WalletBalances />
+        <p class="text-center max-w-xl mb-8 opacity-80">
+          Marchés et actus crypto. CryptoActus ne garde pas de fonds et ne propose plus de dépôt, de retrait ni d’échange.
+        </p>
+
+        <Link
+          :href="route('crypto')"
+          class="px-6 py-3 rounded-full font-semibold bg-indigo-600 text-white"
+        >
+          Voir le marché
+        </Link>
 
       </div>
     </main>
@@ -82,23 +91,18 @@
 import { ref, computed } from 'vue'
 
 // Composants
+import { Link } from '@inertiajs/vue3'
 import SiteFooter from '@/Components/SiteFooter.vue'
 import Sidebar from '@/Components/Sidebar.vue'
 import SidebarIcon from '@/Components/SidebarIcon.vue'
 import Starfield from '@/Components/Starfield.vue'
 import Ticker from '@/Components/Ticker.vue'
-import WalletBalances from '@/Components/WalletBalances.vue'
 
 // Gestion thème
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
-// État sidebar
-const isSidebarOpen = ref(true)
-
-// Ouvrir / fermer sidebar
-function toggleSidebar() {
-  isSidebarOpen.value = !isSidebarOpen.value
-}
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 // Variables du thème
 const {
@@ -112,14 +116,7 @@ const {
 
 // Menu sidebar
 const items = [
-  { route: 'dashboard', label: 'Dashboard', icon: 'home' },
-  { route: 'achat', label: 'Achat', icon: 'hex' },
-  { route: 'retrait', label: 'Retrait', icon: 'orbit' },
-  { route: 'deposit', label: 'Dépôt', icon: 'spark' },
-  { route: 'envoyer', label: 'Envoyer', icon: 'stack' },
-  { route: 'echange', label: 'Échange', icon: 'flow' },
-  { route: 'compte', label: 'Compte', icon: 'id' },
-  { route: 'cartes', label: 'Cartes', icon: 'cards' },
+  { route: 'dashboard', label: 'Tableau de bord', icon: 'home' },
   { route: 'crypto', label: 'Marché', icon: 'pulse' },
 ]
 
@@ -155,5 +152,17 @@ const contentPadTopPx = computed(
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@media (max-width: 767px) {
+  .theme-orb {
+    width: 2rem;
+    height: 2rem;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    font-size: 1.15rem;
+    color: inherit;
+  }
 }
 </style>

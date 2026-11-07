@@ -338,7 +338,7 @@ final class MarketTickerService
                 $pool->as($sym)
                     ->timeout(self::HTTP_TIMEOUT)
                     ->withHeaders([
-                        'User-Agent' => 'Mozilla/5.0 (compatible; iSpaceCoin/1.0)',
+                        'User-Agent' => 'Mozilla/5.0 (compatible; CryptoActus/1.0)',
                         'Accept' => 'application/json',
                     ])
                     ->get("https://query1.finance.yahoo.com/v8/finance/chart/{$sym}", [

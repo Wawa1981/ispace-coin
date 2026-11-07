@@ -11,7 +11,8 @@
       :items="items"
       :isSidebarOpen="isSidebarOpen"
       :isLight="isLight"
-      @toggle="isSidebarOpen = !isSidebarOpen"
+      @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
       <template #icon="{ icon, isLight }">
         <SidebarIcon :icon="icon" :isLight="isLight" />
@@ -19,14 +20,14 @@
     </Sidebar>
 
     <main
-      class="relative z-10 w-full pb-16 transition-all duration-300 px-8"
+      class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8"
       :style="{ paddingTop: 'calc(2rem + 48px)' }"
     >
       <section class="py-6">
         <div class="max-w-5xl mx-auto px-4">
           <div class="flex items-center justify-center">
             <h1 :class="['text-3xl md:text-4xl font-extrabold mb-6 text-center', titleClass]">
-              Retrait - iSpaceCoin
+              Retrait - CryptoActus
             </h1>
           </div>
 
@@ -182,10 +183,11 @@ import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import WalletBalances from '@/Components/WalletBalances.vue'
 
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
 const { isLight, bgClass, textClass, titleClass } = useTheme()
 
-const isSidebarOpen = ref(true)
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 const items = [
   { route: 'dashboard', label: 'Tableau de bord', icon: 'home' },

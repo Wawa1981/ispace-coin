@@ -8,21 +8,22 @@
       :isLight="isLight"
       :items="items"
       @toggle="toggleSidebar"
+      @close="closeSidebar"
     >
         <template #icon="{ icon, isLight }">
             <SidebarIcon :icon="icon" :isLight="isLight" />
         </template>
     </Sidebar>
 
-    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-8">
+    <main class="relative z-10 w-full pb-16 transition-all duration-300 px-4 md:px-8">
         <ThemeSwitcher />
         <div class="flex flex-col items-center justify-start w-full min-h-[calc(100vh-10rem)] pt-20">
-            <h1 :class="['text-3xl font-extrabold text-center mb-12', titleClass]">Cartes de paiement iSpaceCoin</h1>
+            <h1 :class="['text-3xl font-extrabold text-center mb-12', titleClass]">Cartes de paiement CryptoActus</h1>
             <div class="relative w-96 h-56 perspective mb-16" @mousemove="onCardMove" @mouseleave="resetCard">
                 <div class="absolute inset-0 rounded-2xl shadow-2xl transform-style-3d transition-transform duration-300 overflow-hidden" :style="{ transform: `rotateY(${cardRotateY}deg) rotateX(${cardRotateX}deg)` }">
                     <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-700 p-6 flex flex-col justify-between text-white">
                         <div class="flex justify-between text-sm">
-                            <span class="font-bold tracking-wide">iSpaceCoin</span>
+                            <span class="font-bold tracking-wide">CryptoActus</span>
                             <img src="/images/visa.png" alt="Visa" class="h-6" />
                         </div>
                         <div class="text-2xl font-mono tracking-widest">**** **** **** 1234</div>
@@ -66,10 +67,9 @@ import ThemeSwitcher from '@/Components/ThemeSwitcher.vue'
 import SidebarIcon from '@/Components/SidebarIcon.vue' // <-- Ajout de l'import
 
 import { useTheme } from '@/composables/useTheme'
+import { useSidebar } from '@/composables/useSidebar'
 
-/* Sidebar */
-const isSidebarOpen = ref(true)
-function toggleSidebar() { isSidebarOpen.value = !isSidebarOpen.value }
+const { isSidebarOpen, toggleSidebar, closeSidebar } = useSidebar()
 
 /* Thème (utilisé via le composable) */
 const { isLight, bgClass, textClass, titleClass } = useTheme()
